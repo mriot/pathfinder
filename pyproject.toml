@@ -1,0 +1,9 @@
+[project]
+name = "Pathfinder"
+version = "0.1.0"
+requires-python = ">=3.12"
+dependencies = [
+    "dacite>=1.9.2",
+    "dotenv>=0.9.9",
+    "py-cord[speed]>=2.6.1",
+]
