@@ -1,27 +1,49 @@
 from dataclasses import dataclass, field
+from datetime import time
 from pathlib import Path
-from typing import Dict, Literal
+from typing import Dict, List, Literal
 
-Blacklist = Dict[str, list[int]]
+# ---------------------------------------------------------------------------- #
+#                                     TYPES                                    #
+# ---------------------------------------------------------------------------- #
+DungeonID = str
+PathID = int
+
+GuildID = str
+UserID = str
+
+Blacklist = Dict[DungeonID, List[PathID]]
+
+
+# ---------------------------------------------------------------------------- #
+#                                   DATACLASSES                                #
+# ---------------------------------------------------------------------------- #
+@dataclass
+class DailyFrequenter:
+    channel_id: int
+    replace_last_message: bool = True
+    time_for_post: time = time(0, 0)
+
+
+@dataclass
+class GuildSettings:
+    dailyfrequenter: DailyFrequenter | None = None
 
 
 @dataclass
 class UserSettings:
-    blacklist: Blacklist = field(default_factory=dict)
-
-
-# TODO
-# @dataclass
-# class GuildSettings:
-#     users: Dict[str, UserSettings] = field(default_factory=dict)
+    blacklist: Blacklist = field(default_factory=Blacklist)
 
 
 @dataclass
 class Settings:
-    # guilds: Dict[str, GuildSettings] = field(default_factory=dict)
-    users: Dict[str, UserSettings] = field(default_factory=dict)
+    guilds: Dict[GuildID, GuildSettings] = field(default_factory=dict)
+    users: Dict[UserID, UserSettings] = field(default_factory=dict)
 
 
+# ---------------------------------------------------------------------------- #
+#                                 CORE STRUCTS                                 #
+# ---------------------------------------------------------------------------- #
 @dataclass(frozen=True)
 class Environment:
     token: str
@@ -32,7 +54,7 @@ class Environment:
 
 @dataclass(frozen=True)
 class DungeonPath:
-    id: int
+    id: PathID
     name: str
     level: int
     time_of_day: Literal["Day", "Night"]
@@ -42,7 +64,7 @@ class DungeonPath:
 
 @dataclass(frozen=True)
 class Dungeon:
-    id: str
+    id: DungeonID
     name: str
     emoji: str
     paths: list[DungeonPath]
@@ -50,5 +72,5 @@ class Dungeon:
 
 @dataclass(frozen=True)
 class Candidate:
-    dungeon_id: str
-    path_id: int
+    dungeon_id: DungeonID
+    path_id: PathID
