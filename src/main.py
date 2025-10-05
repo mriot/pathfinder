@@ -34,6 +34,9 @@ def pick_paths(
     time_of_day: str | None = None,
     ignore_filters: bool = False,
 ) -> List[Candidate]:
+    if path_count <= 0:
+        return []
+
     candidates: List[Candidate] = []
 
     for dungeon in dungeons:

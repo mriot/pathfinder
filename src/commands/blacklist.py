@@ -76,9 +76,11 @@ class Blacklist(commands.Cog):
 
         if dungeon not in user_settings.blacklist:
             user_settings.blacklist[dungeon] = []
-        if path is not None and path not in user_settings.blacklist[dungeon]:
-            user_settings.blacklist[dungeon].append(path)
-            user_settings.blacklist[dungeon].sort()
+
+        if path is not None:
+            if path not in user_settings.blacklist[dungeon]:
+                user_settings.blacklist[dungeon].append(path)
+                user_settings.blacklist[dungeon].sort()
         else:
             user_settings.blacklist[dungeon] = [
                 p.id for p in selected_dungeon.paths if not p.hidden
@@ -122,7 +124,7 @@ class Blacklist(commands.Cog):
             selected_dungeon = next(d for d in DUNGEONS if d.id == dungeon)
 
             if dungeon in user_settings.blacklist:
-                if path:
+                if path is not None:
                     user_settings.blacklist[dungeon].remove(path)
                     if len(user_settings.blacklist[dungeon]) == 0:
                         del user_settings.blacklist[dungeon]
