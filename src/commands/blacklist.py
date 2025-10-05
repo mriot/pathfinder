@@ -9,7 +9,7 @@ from dungeons import DUNGEONS
 from main import PathfinderBot
 
 
-class Blacklist(commands.Cog):
+class BlacklistCog(commands.Cog):
     blacklist_commands = SlashCommandGroup("blacklist", "Manage your personal blacklist")
 
     @staticmethod
@@ -157,4 +157,4 @@ class Blacklist(commands.Cog):
 #                                     SETUP                                    #
 # ---------------------------------------------------------------------------- #
 def setup(bot):
-    bot.add_cog(Blacklist(bot))
+    bot.add_cog(BlacklistCog(bot))

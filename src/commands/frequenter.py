@@ -6,7 +6,7 @@ from dungeons import DUNGEONS
 from main import PathfinderBot, generate_frequenter_embed, pick_paths
 
 
-class Frequenter(commands.Cog):
+class FrequenterCog(commands.Cog):
     # @staticmethod
     # def _tod_emoji(value: str) -> str:
     #     return "<:night_sigil:1423998252705120390>" if value.lower() == "night" else ""
@@ -108,4 +108,4 @@ class Frequenter(commands.Cog):
 #                                     SETUP                                    #
 # ---------------------------------------------------------------------------- #
 def setup(bot):
-    bot.add_cog(Frequenter(bot))
+    bot.add_cog(FrequenterCog(bot))

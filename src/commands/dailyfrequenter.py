@@ -6,7 +6,7 @@ from discord.ext import commands, tasks
 from main import PathfinderBot, generate_frequenter_embed, pick_paths
 
 
-class DailyFrequenter(commands.Cog):
+class DailyFrequenterCog(commands.Cog):
     dailyfrequenter_commands = SlashCommandGroup(
         "dailyfrequenter", "Manage the automatic daily frequenter"
     )
@@ -83,4 +83,4 @@ class DailyFrequenter(commands.Cog):
 #                                     SETUP                                    #
 # ---------------------------------------------------------------------------- #
 def setup(bot):
-    bot.add_cog(DailyFrequenter(bot))
+    bot.add_cog(DailyFrequenterCog(bot))
