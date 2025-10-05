@@ -17,11 +17,6 @@ class PathfinderBot(discord.Bot):
         super().__init__(**kwargs)
         self.sm = settings_manager
 
-    def user_blacklist(self, user_id: int) -> Blacklist:
-        if user_settings := self.sm.settings.users.get(str(user_id), None):
-            return user_settings.blacklist or {}
-        return {}
-
 
 # ---------------------------------------------------------------------------- #
 #                                  PATH PICKER                                 #

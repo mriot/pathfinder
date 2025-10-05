@@ -31,7 +31,7 @@ class Blacklist(commands.Cog):
         name="view", description="View your personal blacklist (only you can see this)"
     )
     async def show_blacklist(self, ctx: ApplicationContext):
-        blacklist = self.bot.user_blacklist(ctx.author.id)
+        blacklist = self.bot.sm.user_blacklist(ctx.author.id)
 
         lines = []
         for dungeon in DUNGEONS:

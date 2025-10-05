@@ -6,7 +6,7 @@ from pathlib import Path
 
 from dacite import from_dict
 
-from models import Settings, UserSettings
+from models import Blacklist, Settings, UserSettings
 
 
 class SettingsManager:
@@ -51,6 +51,11 @@ class SettingsManager:
 
     def mark_dirty(self):
         self._debounced_save()
+
+    def user_blacklist(self, user_id: int) -> Blacklist:
+        if user_settings := self.settings.users.get(str(user_id), None):
+            return user_settings.blacklist or {}
+        return {}
 
     def user_settings(self, user_id: int) -> UserSettings:
         uid = str(user_id)

@@ -36,7 +36,7 @@ class Frequenter(commands.Cog):
     ):
         candidates = pick_paths(
             DUNGEONS,
-            self.bot.user_blacklist(ctx.author.id),
+            self.bot.sm.user_blacklist(ctx.author.id),
             path_count=path_count,
             no_story=no_story,
             time_of_day=time_of_day,
