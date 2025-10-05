@@ -100,5 +100,6 @@ Used for settings only.
 
 ## Credits
 
-- Thanks to Devin for the bot idea.
-- Thanks to Everless for the `/chaosfrequenter` concept.
+- Thank you Devin for the bot idea.
+- Thank you Everless for the `/chaosfrequenter` concept.
+- Thank you Bird for testing the bot _("I have the urge to break things")_
