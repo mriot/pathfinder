@@ -1,5 +1,4 @@
 from dataclasses import dataclass, field
-from datetime import time
 from pathlib import Path
 from typing import Dict, List, Literal
 
@@ -20,14 +19,15 @@ Blacklist = Dict[DungeonID, List[PathID]]
 # ---------------------------------------------------------------------------- #
 @dataclass
 class DailyFrequenter:
-    channel_id: int
+    channel_id: int = 0
+    message_id: int = 0
     replace_last_message: bool = True
-    time_for_post: time = time(0, 0)
+    time_for_post: str = "00:00"
 
 
 @dataclass
 class GuildSettings:
-    dailyfrequenter: DailyFrequenter | None = None
+    dailyfrequenter: DailyFrequenter = field(default_factory=DailyFrequenter)
 
 
 @dataclass

@@ -6,7 +6,7 @@ from pathlib import Path
 
 from dacite import from_dict
 
-from models import Blacklist, Settings, UserSettings
+from models import Blacklist, GuildSettings, Settings, UserSettings
 
 
 class SettingsManager:
@@ -62,3 +62,9 @@ class SettingsManager:
         if uid not in self.settings.users:
             self.settings.users[uid] = UserSettings()
         return self.settings.users[uid]
+
+    def guild_settings(self, guild_id: int) -> GuildSettings:
+        gid = str(guild_id)
+        if gid not in self.settings.guilds:
+            self.settings.guilds[gid] = GuildSettings()
+        return self.settings.guilds[gid]
