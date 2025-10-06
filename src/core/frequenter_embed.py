@@ -12,9 +12,9 @@ def _tod_emoji(value: str) -> str:
     return "<:night_sigil:1423998252705120390>" if value.lower() == "night" else ""
 
 
-def generate_frequenter_embed(candidates: List[Candidate]):
+def generate_frequenter_embed(picked_paths: List[Candidate]):
     dungeon_sections = []
-    sorted_candidates = sorted(candidates, key=lambda x: x.dungeon_id)  # makes grouping easier
+    sorted_candidates = sorted(picked_paths, key=lambda x: x.dungeon_id)  # makes grouping easier
     for dungeon_id, group in itertools.groupby(sorted_candidates, key=lambda x: (x.dungeon_id)):
         dungeon = next(d for d in DUNGEONS if d.id == dungeon_id)
         paths = []
@@ -28,6 +28,6 @@ def generate_frequenter_embed(candidates: List[Candidate]):
     random.shuffle(dungeon_sections)
     embed = discord.Embed()
     embed.description = "\n".join(dungeon_sections)
-    embed.set_footer(text=f"Generated {len(candidates)} paths for you. Enjoy!")
+    embed.set_footer(text=f"Generated {len(picked_paths)} paths for you. Enjoy!")
 
     return embed

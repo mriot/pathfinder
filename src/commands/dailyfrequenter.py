@@ -88,8 +88,8 @@ class DailyFrequenterCog(commands.Cog):
             )
             return
 
-        candidates = pick_paths()
-        embed = generate_frequenter_embed(candidates=candidates)
+        picked_paths = pick_paths()
+        embed = generate_frequenter_embed(picked_paths)
         message = await target.send(embed=embed)
 
         gsm = self.bot.sm.get_guild(ctx.guild.id)

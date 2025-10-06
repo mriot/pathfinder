@@ -35,7 +35,7 @@ class FrequenterCog(commands.Cog):
 
         usm = self.bot.sm.get_user(ctx.author.id)
 
-        candidates = pick_paths(
+        picked_paths = pick_paths(
             DUNGEONS,
             blacklist=usm.get_blacklist(),
             path_count=path_count,
@@ -44,7 +44,7 @@ class FrequenterCog(commands.Cog):
             ignore_filters=ignore_filters,
         )
 
-        embed = generate_frequenter_embed(candidates=candidates)
+        embed = generate_frequenter_embed(picked_paths)
         await ctx.respond(embed=embed)
 
     # ---------------------------------------------------------------------------- #
