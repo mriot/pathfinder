@@ -10,7 +10,7 @@ class UserSettingsManager:
         self.sm.settings.users.setdefault(self.user_id, UserSettings())
 
     def get_blacklist(self) -> Blacklist:
-        return self.sm.settings.users.setdefault(self.user_id, UserSettings()).blacklist
+        return self.sm.settings.users[self.user_id].blacklist
 
     def blacklist_add(self, dungeon: Dungeon, path_id: PathID | None = None):
         user_settings = self.sm.settings.users[self.user_id]
