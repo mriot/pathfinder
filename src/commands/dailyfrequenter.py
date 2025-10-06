@@ -1,6 +1,13 @@
 import logging
 
-from discord import ApplicationContext, OptionChoice, SlashCommandGroup, option
+from discord import (
+    ApplicationContext,
+    AutocompleteContext,
+    OptionChoice,
+    SlashCommandGroup,
+    TextChannel,
+    option,
+)
 from discord.ext import commands, tasks
 
 from main import PathfinderBot, generate_frequenter_embed, pick_paths
@@ -11,18 +18,30 @@ class DailyFrequenterCog(commands.Cog):
         "dailyfrequenter", "Manage the automatic daily frequenter"
     )
 
-    def _channel_id_autocomplete(self, ctx: ApplicationContext, query: str):
+    @staticmethod
+    def _channel_autocomplete(ctx: AutocompleteContext):
+        guild = ctx.interaction.guild
+        user = ctx.bot.user
+        if guild is None or user is None:
+            return []
+
+        member = guild.get_member(user.id)
+        if member is None:
+            return []
+
         return [
             OptionChoice(name=c.name, value=str(c.id))
-            for c in ctx.guild.channels
-            if query.lower() in c.name.lower()
+            for c in guild.channels
+            if c.name.lower().startswith(ctx.value.lower())
+            and c.permissions_for(member).send_messages
         ]
 
     def __init__(self, bot: PathfinderBot):
         self.bot: PathfinderBot = bot
         self.post_dailyfrequenter.start()
 
-    @tasks.loop(seconds=10)
+    # @tasks.loop(time=datetime.time(hour=0, minute=0, tzinfo=datetime.timezone.utc))
+    @tasks.loop(seconds=30)
     async def post_dailyfrequenter(self):
         for guild_id, settings in self.bot.sm.settings.guilds.items():
             channel = self.bot.get_channel(settings.dailyfrequenter.channel_id)
@@ -32,16 +51,18 @@ class DailyFrequenterCog(commands.Cog):
                 )
                 continue
 
-            message = self.bot.get_message(settings.dailyfrequenter.message_id)
-            if not message:
-                logging.warning(
-                    f"Message {settings.dailyfrequenter.message_id} not found in guild {guild_id}"
-                )
-                continue
+            if isinstance(channel, TextChannel):
+                message = await channel.fetch_message(settings.dailyfrequenter.message_id)
 
-            candidates = pick_paths()
-            embed = generate_frequenter_embed(candidates=candidates)
-            await message.edit(embed=embed)
+                if not message:
+                    logging.warning(
+                        f"Message {settings.dailyfrequenter.message_id} not found in guild {guild_id}"
+                    )
+                    continue
+
+                candidates = pick_paths()
+                embed = generate_frequenter_embed(candidates=candidates)
+                await message.edit(embed=embed)
 
     # ---------------------------------------------------------------------------- #
     #                             DAILYFREQUENTER SETUP                            #
@@ -53,30 +74,38 @@ class DailyFrequenterCog(commands.Cog):
         "channel",
         str,  # int isn't working
         description="Select a channel",
-        autocomplete=lambda ctx: [
-            OptionChoice(name=c.name, value=str(c.id))
-            for c in ctx.interaction.guild.channels
-            if c.name.lower().startswith(ctx.value.lower())
-        ],
+        autocomplete=_channel_autocomplete,
     )
     async def setup_dailyfrequenter(self, ctx: ApplicationContext, channel: str):
-        guild_settings = self.bot.sm.guild_settings(ctx.guild.id)
-        guild_settings.dailyfrequenter.channel_id = int(channel)
+        channel_id = int(channel)
 
-        await ctx.respond("blabla set up", ephemeral=True)
+        target = self.bot.get_channel(channel_id)
+        if not isinstance(target, TextChannel):
+            await ctx.respond(
+                "Selected channel is not a text channel or cannot be accessed.", ephemeral=True
+            )
+            return
 
         candidates = pick_paths()
         embed = generate_frequenter_embed(candidates=candidates)
+        message = await target.send(embed=embed)
 
-        message = await ctx.respond(embed=embed)
-        guild_settings.dailyfrequenter.message_id = message.id
+        gsm = self.bot.sm.get_guild(ctx.guild.id)
+        gsm.set_dailyfrequenter(channel_id, message.id)
 
-        # await ctx.interaction.edit_original_response(content="Updated text")
+        await ctx.respond(f"Daily frequenter set up in {target.mention}.", ephemeral=True)
 
-        self.bot.sm.mark_dirty()
-        # embed = discord.Embed(title="Daily frequenter setup")
-        # embed.add_field(name="Channel", value=channel)
-        # await ctx.respond(embed=embed, ephemeral=True)
+    # ---------------------------------------------------------------------------- #
+    #                             DAILYFREQUENTER CLEAR                            #
+    # ---------------------------------------------------------------------------- #
+    @dailyfrequenter_commands.command(
+        name="clear", description="Clear the automatic daily frequenter"
+    )
+    async def clear_dailyfrequenter(self, ctx: ApplicationContext):
+        gsm = self.bot.sm.get_guild(ctx.guild.id)
+        gsm.clear_guild()  # we don't have any other guild settings yet - so just remove it
+
+        await ctx.respond("blabla cleared", ephemeral=True)  # TODO
 
 
 # ---------------------------------------------------------------------------- #
