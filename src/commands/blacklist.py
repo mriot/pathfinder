@@ -5,7 +5,7 @@ from discord import ApplicationContext, SlashCommandGroup
 from discord.commands import option
 from discord.ext import commands
 
-from dungeons import DUNGEONS
+from data.dungeons import DUNGEONS
 from main import PathfinderBot
 
 

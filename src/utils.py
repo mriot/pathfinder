@@ -3,7 +3,7 @@ import os
 from os import path
 from pathlib import Path
 
-from models import Environment
+from data.schemas import Environment
 
 
 def setup_logging():

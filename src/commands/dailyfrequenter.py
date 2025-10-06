@@ -10,7 +10,9 @@ from discord import (
 )
 from discord.ext import commands, tasks
 
-from main import PathfinderBot, generate_frequenter_embed, pick_paths
+from core.bot import PathfinderBot
+from core.frequenter_embed import generate_frequenter_embed
+from core.path_picker import pick_paths
 
 
 class DailyFrequenterCog(commands.Cog):

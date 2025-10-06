@@ -1,4 +1,4 @@
-from models import Dungeon, DungeonPath
+from data.schemas import Dungeon, DungeonPath
 
 DUNGEONS: list[Dungeon] = [
     Dungeon(

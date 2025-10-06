@@ -2,8 +2,10 @@ from discord import ApplicationContext
 from discord.commands import option
 from discord.ext import commands
 
-from dungeons import DUNGEONS
-from main import PathfinderBot, generate_frequenter_embed, pick_paths
+from core.bot import PathfinderBot
+from core.frequenter_embed import generate_frequenter_embed
+from core.path_picker import pick_paths
+from data.dungeons import DUNGEONS
 
 
 class FrequenterCog(commands.Cog):
@@ -26,6 +28,11 @@ class FrequenterCog(commands.Cog):
         time_of_day: str | None = None,
         ignore_filters: bool = False,
     ):
+        if path_count <= 0:
+            return await ctx.respond(
+                "https://tenor.com/view/rickroll-bailu-gif-13109126276794815880", ephemeral=True
+            )
+
         usm = self.bot.sm.get_user(ctx.author.id)
 
         candidates = pick_paths(
