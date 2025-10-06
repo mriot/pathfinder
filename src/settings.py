@@ -6,7 +6,7 @@ from pathlib import Path
 
 from dacite import from_dict
 
-from models import Blacklist, GuildSettings, Settings, UserSettings
+from models import Blacklist, Dungeon, GuildSettings, PathID, Settings, UserSettings
 
 
 class SettingsManager:
@@ -15,6 +15,16 @@ class SettingsManager:
         self.path = Path(__file__).parents[1] / self.filename
         self.settings: Settings = self._load_or_create()
         self._save_timer: threading.Timer | None = None
+
+    def get_user(self, user_id: int):
+        return UserSettingsManager(self, user_id)
+
+    def get_guild(self, guild_id: int):
+        return GuildSettingsManager(self, guild_id)
+
+    # ---------------------------------------------------------------------------- #
+    #                                 SETTINGS.JSON                                #
+    # ---------------------------------------------------------------------------- #
 
     def _load_or_create(self) -> Settings:
         try:
@@ -52,19 +62,76 @@ class SettingsManager:
     def mark_dirty(self):
         self._debounced_save()
 
-    def user_blacklist(self, user_id: int) -> Blacklist:
-        if user_settings := self.settings.users.get(str(user_id), None):
-            return user_settings.blacklist or {}
-        return {}
 
-    def user_settings(self, user_id: int) -> UserSettings:
-        uid = str(user_id)
-        if uid not in self.settings.users:
-            self.settings.users[uid] = UserSettings()
-        return self.settings.users[uid]
+class UserSettingsManager:
+    def __init__(self, sm: SettingsManager, user_id: int):
+        self.sm = sm
+        self.user_id = str(user_id)
 
-    def guild_settings(self, guild_id: int) -> GuildSettings:
-        gid = str(guild_id)
-        if gid not in self.settings.guilds:
-            self.settings.guilds[gid] = GuildSettings()
-        return self.settings.guilds[gid]
+        self.sm.settings.users.setdefault(self.user_id, UserSettings())
+
+    def get_blacklist(self) -> Blacklist:
+        return self.sm.settings.users.setdefault(self.user_id, UserSettings()).blacklist
+
+    def blacklist_add(self, dungeon: Dungeon, path_id: PathID | None = None):
+        user_settings = self.sm.settings.users[self.user_id]
+
+        if dungeon.id not in user_settings.blacklist:
+            user_settings.blacklist[dungeon.id] = []
+
+        if path_id is not None:
+            if path_id not in user_settings.blacklist[dungeon.id]:
+                user_settings.blacklist[dungeon.id].append(path_id)
+                user_settings.blacklist[dungeon.id].sort()
+        else:
+            user_settings.blacklist[dungeon.id] = [p.id for p in dungeon.paths if not p.hidden]
+
+        self.sm.mark_dirty()
+
+    def blacklist_remove(self, dungeon: Dungeon, path_id: PathID | None = None):
+        user_settings = self.sm.settings.users[self.user_id]
+
+        if dungeon.id in user_settings.blacklist:
+            if path_id is not None:
+                if path_id in user_settings.blacklist[dungeon.id]:
+                    user_settings.blacklist[dungeon.id].remove(path_id)
+                if len(user_settings.blacklist[dungeon.id]) == 0:
+                    del user_settings.blacklist[dungeon.id]
+            else:
+                del user_settings.blacklist[dungeon.id]
+
+        self.sm.mark_dirty()
+
+    def blacklist_clear(self):
+        if self.user_id in self.sm.settings.users:
+            self.sm.settings.users[self.user_id].blacklist.clear()
+            self.sm.mark_dirty()
+
+    def clear_user(self):
+        if self.user_id in self.sm.settings.users:
+            del self.sm.settings.users[self.user_id]
+            self.sm.mark_dirty()
+
+
+class GuildSettingsManager:
+    def __init__(self, sm: SettingsManager, guild_id: int):
+        self.sm = sm
+        self.guild_id = str(guild_id)
+
+        self.sm.settings.guilds.setdefault(self.guild_id, GuildSettings())
+
+    def set_dailyfrequenter(self, channel_id: int, message_id: int):
+        g = self.sm.settings.guilds[self.guild_id]
+        g.dailyfrequenter.channel_id = channel_id
+        g.dailyfrequenter.message_id = message_id
+        self.sm.mark_dirty()
+
+    def unset_dailyfrequenter(self):
+        g = self.sm.settings.guilds[self.guild_id]
+        g.dailyfrequenter = GuildSettings().dailyfrequenter
+        self.sm.mark_dirty()
+
+    def clear_guild(self):
+        if self.guild_id in self.sm.settings.guilds:
+            del self.sm.settings.guilds[self.guild_id]
+            self.sm.mark_dirty()

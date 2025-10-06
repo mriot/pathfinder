@@ -32,7 +32,7 @@ class GuildSettings:
 
 @dataclass
 class UserSettings:
-    blacklist: Blacklist = field(default_factory=Blacklist)
+    blacklist: Blacklist = field(default_factory=dict)
 
 
 @dataclass

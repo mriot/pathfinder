@@ -27,11 +27,10 @@ class BlacklistCog(commands.Cog):
     # ---------------------------------------------------------------------------- #
     #                                BLACKLIST VIEW                                #
     # ---------------------------------------------------------------------------- #
-    @blacklist_commands.command(
-        name="view", description="View your personal blacklist (only you can see this)"
-    )
+    @blacklist_commands.command(name="view", description="View your personal blacklist")
     async def show_blacklist(self, ctx: ApplicationContext):
-        blacklist = self.bot.sm.user_blacklist(ctx.author.id)
+        usm = self.bot.sm.get_user(ctx.author.id)
+        blacklist = usm.get_blacklist()
 
         lines = []
         for dungeon in DUNGEONS:
@@ -52,9 +51,7 @@ class BlacklistCog(commands.Cog):
     # ---------------------------------------------------------------------------- #
     #                                 BLACKLIST ADD                                #
     # ---------------------------------------------------------------------------- #
-    @blacklist_commands.command(
-        name="add", description="Exclude a dungeon or path from your routes"
-    )
+    @blacklist_commands.command(name="add", description="Exclude a dungeon or path")
     @option(
         "dungeon",
         str,
@@ -71,22 +68,10 @@ class BlacklistCog(commands.Cog):
         if path is not None and (path < 0 or path > 4):
             return await ctx.respond("Invalid path :face_with_raised_eyebrow:", ephemeral=True)
 
-        user_settings = self.bot.sm.user_settings(ctx.author.id)
         selected_dungeon = next(d for d in DUNGEONS if d.id == dungeon)
 
-        if dungeon not in user_settings.blacklist:
-            user_settings.blacklist[dungeon] = []
-
-        if path is not None:
-            if path not in user_settings.blacklist[dungeon]:
-                user_settings.blacklist[dungeon].append(path)
-                user_settings.blacklist[dungeon].sort()
-        else:
-            user_settings.blacklist[dungeon] = [
-                p.id for p in selected_dungeon.paths if not p.hidden
-            ]
-
-        self.bot.sm.mark_dirty()
+        usm = self.bot.sm.get_user(ctx.author.id)
+        usm.blacklist_add(selected_dungeon, path)
 
         embed = discord.Embed(title="Blacklist updated")
         path_info = "All paths" if path is None else selected_dungeon.paths[path].name
@@ -116,22 +101,10 @@ class BlacklistCog(commands.Cog):
         autocomplete=_path_id_autocomplete,
     )
     async def include(self, ctx: ApplicationContext, dungeon: str, path: int | None = None):
-        if user_id := str(ctx.author.id):
-            if user_id not in self.bot.sm.settings.users:
-                return await ctx.respond("You have no blacklist entries.", ephemeral=True)
+        selected_dungeon = next(d for d in DUNGEONS if d.id == dungeon)
 
-            user_settings = self.bot.sm.settings.users[user_id]
-            selected_dungeon = next(d for d in DUNGEONS if d.id == dungeon)
-
-            if dungeon in user_settings.blacklist:
-                if path is not None:
-                    user_settings.blacklist[dungeon].remove(path)
-                    if len(user_settings.blacklist[dungeon]) == 0:
-                        del user_settings.blacklist[dungeon]
-                else:
-                    del user_settings.blacklist[dungeon]
-
-            self.bot.sm.mark_dirty()
+        usm = self.bot.sm.get_user(ctx.author.id)
+        usm.blacklist_remove(selected_dungeon, path)
 
         embed = discord.Embed(title="Blacklist updated")
         path_info = "All paths" if path is None else selected_dungeon.paths[path].name
@@ -145,10 +118,8 @@ class BlacklistCog(commands.Cog):
     # ---------------------------------------------------------------------------- #
     @blacklist_commands.command(name="clear", description="Clear your personal blacklist")
     async def clear_blacklist(self, ctx: ApplicationContext):
-        if user_id := str(ctx.author.id):
-            if user_id in self.bot.sm.settings.users:
-                self.bot.sm.settings.users[user_id].blacklist = {}
-                self.bot.sm.mark_dirty()
+        usm = self.bot.sm.get_user(ctx.author.id)
+        usm.clear_user()
 
         await ctx.respond("Cleared your personal blacklist", ephemeral=True)
 

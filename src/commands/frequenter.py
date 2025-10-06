@@ -7,33 +7,6 @@ from main import PathfinderBot, generate_frequenter_embed, pick_paths
 
 
 class FrequenterCog(commands.Cog):
-    # @staticmethod
-    # def _tod_emoji(value: str) -> str:
-    #     return "<:night_sigil:1423998252705120390>" if value.lower() == "night" else ""
-
-    # @staticmethod
-    # def generate_frequenter_embed(candidates: List[Candidate]):
-    #     dungeon_sections = []
-    #     sorted_candidates = sorted(candidates, key=lambda x: x.dungeon_id)  # makes grouping easier
-    #     for dungeon_id, group in itertools.groupby(sorted_candidates, key=lambda x: (x.dungeon_id)):
-    #         dungeon = next(d for d in DUNGEONS if d.id == dungeon_id)
-    #         paths = []
-
-    #         for candidate in sorted(group, key=lambda x: x.path_id):
-    #             path = next(p for p in dungeon.paths if p.id == candidate.path_id)
-    #             paths.append(f"{path.name} {Frequenter._tod_emoji(path.time_of_day)}")
-
-    #         dungeon_sections.append(
-    #             f"### {dungeon.emoji} {dungeon.name}" + "\n - ".join(["", *paths])
-    #         )
-
-    #     random.shuffle(dungeon_sections)
-    #     embed = discord.Embed()
-    #     embed.description = "\n".join(dungeon_sections)
-    #     embed.set_footer(text=f"Generated {len(candidates)} paths for you. Enjoy!")
-
-    #     return embed
-
     def __init__(self, bot: PathfinderBot):
         self.bot: PathfinderBot = bot
 
@@ -53,9 +26,11 @@ class FrequenterCog(commands.Cog):
         time_of_day: str | None = None,
         ignore_filters: bool = False,
     ):
+        usm = self.bot.sm.get_user(ctx.author.id)
+
         candidates = pick_paths(
             DUNGEONS,
-            blacklist=self.bot.sm.user_blacklist(ctx.author.id),
+            blacklist=usm.get_blacklist(),
             path_count=path_count,
             no_story=no_story,
             time_of_day=time_of_day,
@@ -65,10 +40,8 @@ class FrequenterCog(commands.Cog):
         embed = generate_frequenter_embed(candidates=candidates)
         await ctx.respond(embed=embed)
 
-    # ---------------- frequenter commands below are just aliases ---------------- #
-
     # ---------------------------------------------------------------------------- #
-    #                               NIGHT FREQUENTER                               #
+    #                            NIGHT FREQUENTER ALIAS                            #
     # ---------------------------------------------------------------------------- #
     @commands.slash_command(
         name="nightfrequenter", description="Generate a frequenter route with only night time paths"
@@ -81,7 +54,7 @@ class FrequenterCog(commands.Cog):
         await self.frequenter(ctx, path_count, no_story=no_story, time_of_day="night")
 
     # ---------------------------------------------------------------------------- #
-    #                                DAY FREQUENTER                                #
+    #                             DAY FREQUENTER ALIAS                             #
     # ---------------------------------------------------------------------------- #
     @commands.slash_command(
         name="dayfrequenter", description="Generate a frequenter route with only day time paths"
@@ -94,7 +67,7 @@ class FrequenterCog(commands.Cog):
         await self.frequenter(ctx, path_count, no_story=no_story, time_of_day="day")
 
     # ---------------------------------------------------------------------------- #
-    #                               CHAOS FREQUENTER                               #
+    #                            CHAOS FREQUENTER ALIAS                            #
     # ---------------------------------------------------------------------------- #
     @commands.slash_command(
         name="chaosfrequenter", description="Generate a random frequenter route"
