@@ -1,7 +1,6 @@
 import logging
 import os
 from os import path
-from pathlib import Path
 
 from data.schemas import Environment
 
@@ -30,16 +29,15 @@ def setup_env() -> Environment:
     from dotenv import load_dotenv
 
     load_dotenv()
-    token = os.getenv("TOKEN") or ""
-    app_id = int(os.getenv("APP_ID") or 0)
-    guild_id = os.getenv("GUILD_ID")
+    TOKEN = os.getenv("TOKEN") or ""
+    APP_ID = int(os.getenv("APP_ID") or 0)
+    DEBUG_GUILD_ID = os.getenv("DEBUG_GUILD_ID")
 
-    if not (token and app_id):
+    if not (TOKEN and APP_ID):
         raise SystemExit("Missing environment variables.")
 
     return Environment(
-        token=token,
-        app_id=app_id,
-        guild_id=int(guild_id) if guild_id else None,
-        root=Path(__file__).resolve().parents[1],
+        TOKEN=TOKEN,
+        APP_ID=APP_ID,
+        DEBUG_GUILD_ID=int(DEBUG_GUILD_ID) if DEBUG_GUILD_ID else None,
     )

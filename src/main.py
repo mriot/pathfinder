@@ -11,9 +11,9 @@ def main():
     sm = SettingsManager()
     bot = PathfinderBot(
         intents=discord.Intents.default(),
-        application_id=env.app_id,
+        application_id=env.APP_ID,
         auto_sync_commands=True,
-        debug_guilds=[env.guild_id] if env.guild_id else None,
+        debug_guilds=[env.DEBUG_GUILD_ID] if env.DEBUG_GUILD_ID else None,
         settings_manager=sm,
     )
 
@@ -21,7 +21,7 @@ def main():
     bot.load_extension("commands.blacklist")
     bot.load_extension("commands.dailyfrequenter")
 
-    bot.run(env.token)
+    bot.run(env.TOKEN)
 
 
 if __name__ == "__main__":

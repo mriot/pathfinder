@@ -46,10 +46,9 @@ class Settings:
 # ---------------------------------------------------------------------------- #
 @dataclass(frozen=True)
 class Environment:
-    token: str
-    app_id: int
-    guild_id: int | None
-    root: Path
+    TOKEN: str
+    APP_ID: int
+    DEBUG_GUILD_ID: int | None
 
 
 @dataclass(frozen=True)
