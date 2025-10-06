@@ -1,5 +1,4 @@
 from dataclasses import dataclass, field
-from pathlib import Path
 from typing import Dict, List, Literal
 
 # ---------------------------------------------------------------------------- #
@@ -19,10 +18,9 @@ Blacklist = Dict[DungeonID, List[PathID]]
 # ---------------------------------------------------------------------------- #
 @dataclass
 class DailyFrequenter:
-    channel_id: int = 0
-    message_id: int = 0
-    replace_last_message: bool = True
-    time_for_post: str = "00:00"
+    channel_id: int | None = None
+    message_id: int | None = None
+    edit_last_message: bool = True  # False = del old + post new msg ## ! CURRENTLY UNUSED
 
 
 @dataclass

@@ -1,13 +1,8 @@
+import datetime
 import logging
 
-from discord import (
-    ApplicationContext,
-    AutocompleteContext,
-    OptionChoice,
-    SlashCommandGroup,
-    TextChannel,
-    option,
-)
+import discord
+from discord import ApplicationContext, SlashCommandGroup, TextChannel
 from discord.ext import commands, tasks
 
 from core.bot import PathfinderBot
@@ -17,85 +12,143 @@ from core.path_picker import pick_paths
 
 class DailyFrequenterCog(commands.Cog):
     dailyfrequenter_commands = SlashCommandGroup(
-        "dailyfrequenter", "Manage the automatic daily frequenter"
+        "dailyfrequenter",
+        "Manage the automatic daily frequenter",
+        default_member_permissions=discord.Permissions(manage_guild=True),
     )
-
-    @staticmethod
-    def _channel_autocomplete(ctx: AutocompleteContext):
-        guild = ctx.interaction.guild
-        user = ctx.bot.user
-        if guild is None or user is None:
-            return []
-
-        member = guild.get_member(user.id)
-        if member is None:
-            return []
-
-        return [
-            OptionChoice(name=c.name, value=str(c.id))
-            for c in guild.channels
-            if c.name.lower().startswith(ctx.value.lower())
-            and c.permissions_for(member).send_messages
-        ]
 
     def __init__(self, bot: PathfinderBot):
         self.bot: PathfinderBot = bot
         self.post_dailyfrequenter.start()
 
-    # @tasks.loop(time=datetime.time(hour=0, minute=0, tzinfo=datetime.timezone.utc))
-    @tasks.loop(seconds=30)
+    @tasks.loop(time=datetime.time(hour=0, minute=0, tzinfo=datetime.timezone.utc))
     async def post_dailyfrequenter(self):
-        for guild_id, settings in self.bot.sm.settings.guilds.items():
-            channel = self.bot.get_channel(settings.dailyfrequenter.channel_id)
-            if not channel:
-                logging.warning(
-                    f"Channel {settings.dailyfrequenter.channel_id} not found in guild {guild_id}"
-                )
-                continue
+        for guild_id in self.bot.sm.settings.guilds.keys():
+            try:
+                df = self.bot.sm.get_guild(int(guild_id)).get_dailyfrequenter()
 
-            if isinstance(channel, TextChannel):
-                message = await channel.fetch_message(settings.dailyfrequenter.message_id)
+                if not df.channel_id:
+                    logging.warning(f"No channel configured for guild {guild_id}")
+                    continue
 
-                if not message:
+                channel = self.bot.get_channel(df.channel_id)
+                if not isinstance(channel, discord.TextChannel):
                     logging.warning(
-                        f"Message {settings.dailyfrequenter.message_id} not found in guild {guild_id}"
+                        f"Invalid or missing TextChannel {df.channel_id} in guild {guild_id}"
                     )
                     continue
 
-                candidates = pick_paths()
-                embed = generate_frequenter_embed(candidates=candidates)
-                await message.edit(embed=embed)
+                previous_message = None
+                if df.message_id:
+                    try:
+                        previous_message = await channel.fetch_message(df.message_id)
+                    except discord.NotFound:
+                        logging.warning(f"Message {df.message_id} not found in guild {guild_id}")
+                        previous_message = None
+                    except discord.Forbidden:
+                        logging.error(
+                            f"No permission to fetch message {df.message_id} in guild {guild_id}"
+                        )
+                        continue
+                    except discord.HTTPException as e:
+                        logging.error(
+                            f"HTTP error fetching message {df.message_id} in {guild_id}: {e}"
+                        )
+                        continue
+
+                picked_paths = pick_paths()
+                embed = generate_frequenter_embed(picked_paths)
+
+                if previous_message:
+                    try:
+                        await previous_message.edit(embed=embed)
+                    except discord.NotFound:
+                        logging.warning(
+                            f"Message {df.message_id} disappeared while editing in {guild_id}"
+                        )
+                    except discord.Forbidden:
+                        logging.error(
+                            f"No permission to edit message {df.message_id} in guild {guild_id}"
+                        )
+                    except discord.HTTPException as e:
+                        logging.error(
+                            f"HTTP error editing message {df.message_id} in {guild_id}: {e}"
+                        )
+                else:
+                    try:
+                        await channel.send(embed=embed)
+                        logging.info(f"Reposted dailyfrequenter in {guild_id}")
+                    except discord.Forbidden:
+                        logging.error(f"No permission to send message in {df.channel_id}")
+                    except discord.HTTPException as e:
+                        logging.error(f"HTTP error sending message in {guild_id}: {e}")
+
+            except Exception as e:
+                logging.exception(
+                    f"Unexpected error in post_dailyfrequenter for guild {guild_id}: {e}"
+                )
+
+    @post_dailyfrequenter.before_loop
+    async def before_post_dailyfrequenter(self):
+        await self.bot.wait_until_ready()
+
+    # ---------------------------------------------------------------------------- #
+    #                             DAILYFREQUENTER VIEW                             #
+    # ---------------------------------------------------------------------------- #
+    @dailyfrequenter_commands.command(
+        name="view", description="Show the current configuration and status of the daily frequenter"
+    )
+    async def view_dailyfrequenter(self, ctx: ApplicationContext):
+        gsm = self.bot.sm.get_guild(ctx.guild.id)
+        df = gsm.get_dailyfrequenter()
+
+        if not df.channel_id:
+            await ctx.respond("No daily frequenter is currently configured.", ephemeral=True)
+            return
+
+        channel = self.bot.get_channel(df.channel_id)
+        if channel and isinstance(channel, TextChannel):
+            await ctx.respond(
+                f"Daily frequenter is currently set up in {channel.mention}.", ephemeral=True
+            )
+        else:
+            await ctx.respond(
+                f"Daily frequenter is currently set up in an unknown channel with ID {df.channel_id}.",
+                ephemeral=True,
+            )
 
     # ---------------------------------------------------------------------------- #
     #                             DAILYFREQUENTER SETUP                            #
     # ---------------------------------------------------------------------------- #
     @dailyfrequenter_commands.command(
-        name="setup", description="Setup the automatic daily frequenter"
+        name="setup", description="Setup an automatic daily frequenter in this channel"
     )
-    @option(
-        "channel",
-        str,  # int isn't working
-        description="Select a channel",
-        autocomplete=_channel_autocomplete,
-    )
-    async def setup_dailyfrequenter(self, ctx: ApplicationContext, channel: str):
-        channel_id = int(channel)
-
-        target = self.bot.get_channel(channel_id)
-        if not isinstance(target, TextChannel):
+    async def setup_dailyfrequenter(self, ctx: ApplicationContext):
+        if not isinstance(ctx.channel, TextChannel):
             await ctx.respond(
-                "Selected channel is not a text channel or cannot be accessed.", ephemeral=True
+                "This command must be used in a text channel I can access.",
+                ephemeral=True,
             )
             return
 
-        picked_paths = pick_paths()
-        embed = generate_frequenter_embed(picked_paths)
-        message = await target.send(embed=embed)
+        embed = generate_frequenter_embed(pick_paths())
+
+        try:
+            message = await ctx.channel.send(embed=embed)
+        except discord.Forbidden:
+            await ctx.respond("I don't have permission to send messages here.", ephemeral=True)
+            return
+        except discord.HTTPException as e:
+            await ctx.respond(f"Failed to send message: {e}", ephemeral=True)
+            return
 
         gsm = self.bot.sm.get_guild(ctx.guild.id)
-        gsm.set_dailyfrequenter(channel_id, message.id)
+        gsm.set_dailyfrequenter(ctx.channel.id, message.id)
 
-        await ctx.respond(f"Daily frequenter set up in {target.mention}.", ephemeral=True)
+        await ctx.respond(
+            f"Daily frequenter successfully set up in {ctx.channel.mention}.",
+            ephemeral=True,
+        )
 
     # ---------------------------------------------------------------------------- #
     #                             DAILYFREQUENTER CLEAR                            #
@@ -105,9 +158,12 @@ class DailyFrequenterCog(commands.Cog):
     )
     async def clear_dailyfrequenter(self, ctx: ApplicationContext):
         gsm = self.bot.sm.get_guild(ctx.guild.id)
-        gsm.clear_guild()  # we don't have any other guild settings yet - so just remove it
+        gsm.clear_guild()  # currently removes all guild-specific settings
 
-        await ctx.respond("blabla cleared", ephemeral=True)  # TODO
+        await ctx.respond(
+            "Daily frequenter configuration cleared for this server.",
+            ephemeral=True,
+        )
 
 
 # ---------------------------------------------------------------------------- #

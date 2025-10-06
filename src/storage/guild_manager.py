@@ -1,4 +1,4 @@
-from data.schemas import GuildSettings
+from data.schemas import DailyFrequenter, GuildSettings
 from storage.settings_manager import SettingsManager
 
 
@@ -8,6 +8,9 @@ class GuildSettingsManager:
         self.guild_id = str(guild_id)
 
         self.sm.settings.guilds.setdefault(self.guild_id, GuildSettings())
+
+    def get_dailyfrequenter(self) -> DailyFrequenter:
+        return self.sm.settings.guilds[self.guild_id].dailyfrequenter
 
     def set_dailyfrequenter(self, channel_id: int, message_id: int):
         g = self.sm.settings.guilds[self.guild_id]
