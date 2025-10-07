@@ -56,7 +56,6 @@ class DungeonPath:
     level: int
     time_of_day: Literal["Day", "Night"]
     story: bool
-    hidden: bool = False  # used for Arah Story as it's not repeatable
 
 
 @dataclass(frozen=True)

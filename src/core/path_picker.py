@@ -19,22 +19,23 @@ def pick_paths(
     candidates: List[Candidate] = []
 
     for dungeon in dungeons:
-        excluded = blacklist.get(dungeon.id)
+        excluded = blacklist.get(dungeon.id, [])
 
-        # TODO might be wrong?
-        if not ignore_filters and excluded == []:
-            continue  # entire dungeon excluded
+        # skip entire dungeon if all paths are blacklisted
+        if not ignore_filters and len(excluded) >= 4:  # each dungeon has 4 valid paths
+            continue
 
         for path in dungeon.paths:
-            if path.hidden:
+            if ignore_filters:
+                candidates.append(Candidate(dungeon.id, path.id))
                 continue
-            if not ignore_filters:
-                if isinstance(excluded, list) and path.id in excluded:
-                    continue
-                if no_story and path.story:
-                    continue
-                if time_of_day and path.time_of_day.lower() != time_of_day.lower():
-                    continue
+
+            if (
+                path.id in excluded
+                or (no_story and path.story)
+                or (time_of_day and path.time_of_day.lower() != time_of_day.lower())
+            ):
+                continue
 
             candidates.append(Candidate(dungeon.id, path.id))
 

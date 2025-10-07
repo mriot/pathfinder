@@ -16,9 +16,7 @@ class BlacklistCog(commands.Cog):
     def _path_id_autocomplete(ctx: ApplicationContext) -> List[discord.OptionChoice]:
         for d in DUNGEONS:
             if d.id == ctx.options.get("dungeon"):
-                return [
-                    discord.OptionChoice(name=p.name, value=p.id) for p in d.paths if not p.hidden
-                ]
+                return [discord.OptionChoice(name=p.name, value=p.id) for p in d.paths]
         return []
 
     def __init__(self, bot: PathfinderBot):
@@ -35,6 +33,7 @@ class BlacklistCog(commands.Cog):
         lines = []
         for dungeon in DUNGEONS:
             blacklist_entry = blacklist.get(dungeon.id)
+            # magic number 4 is used because each dungeon has 4 valid paths
             if isinstance(blacklist_entry, list) and len(blacklist_entry) >= 4:
                 lines.append(f"{dungeon.emoji} **{dungeon.name}**: All paths")
             elif isinstance(blacklist_entry, list) and blacklist_entry:

@@ -23,7 +23,7 @@ class UserSettingsManager:
                 user_settings.blacklist[dungeon.id].append(path_id)
                 user_settings.blacklist[dungeon.id].sort()
         else:
-            user_settings.blacklist[dungeon.id] = [p.id for p in dungeon.paths if not p.hidden]
+            user_settings.blacklist[dungeon.id] = [p.id for p in dungeon.paths]
 
         self.sm.mark_dirty()
 

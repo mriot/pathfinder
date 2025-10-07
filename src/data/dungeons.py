@@ -83,7 +83,7 @@ DUNGEONS: list[Dungeon] = [
         name="The Ruined City of Arah",
         emoji="<:arah:1423759936239829083>",
         paths=[
-            DungeonPath(0, "Story", 80, "Day", True, hidden=True),
+            # Arah Story is not included because it cannot be replayed
             DungeonPath(1, "Path 1 — `Jotun`", 80, "Day", False),
             DungeonPath(2, "Path 2 — `Mursaat`", 80, "Day", False),
             DungeonPath(3, "Path 3 — `Forgotten`", 80, "Day", False),
