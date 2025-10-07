@@ -16,10 +16,11 @@ class FrequenterCog(commands.Cog):
     #                               FREQUENTER - MAIN                              #
     # ---------------------------------------------------------------------------- #
     @commands.slash_command(name="frequenter", description="Generate a frequenter route")
-    @option("path_count", int, description="Number of paths to generate")
-    @option("no_story", bool, description="Exclude story paths?")
-    @option("time_of_day", str, description="Filter by time of day", choices=["day", "night"])
-    @option("ignore_filters", bool, description="Ignores blacklist and filters")
+    @option("path_count", int, description="Number of paths")
+    @option("no_story", bool, description="Exclude story paths")
+    @option("time_of_day", str, description="Filter by time", choices=["day", "night"])
+    @option("ignore_filters", bool, description="Ignore blacklist and filters")
+    @option("public", bool, description="Make route visible to others")
     async def frequenter(
         self,
         ctx: ApplicationContext,
@@ -27,6 +28,7 @@ class FrequenterCog(commands.Cog):
         no_story: bool = False,
         time_of_day: str | None = None,
         ignore_filters: bool = False,
+        public: bool = False,
     ):
         if path_count <= 0:
             return await ctx.respond(
@@ -45,7 +47,7 @@ class FrequenterCog(commands.Cog):
         )
 
         embed = generate_frequenter_embed(picked_paths)
-        await ctx.respond(embed=embed)
+        await ctx.respond(embed=embed, ephemeral=not public)
 
     # ---------------------------------------------------------------------------- #
     #                            NIGHT FREQUENTER ALIAS                            #
@@ -53,12 +55,23 @@ class FrequenterCog(commands.Cog):
     @commands.slash_command(
         name="nightfrequenter", description="Generate a frequenter route with only night time paths"
     )
-    @option("paths", int, description="Number of paths to generate")
-    @option("no_story", bool, description="Exclude story paths?")
+    @option("path_count", int, description="Number of paths")
+    @option("no_story", bool, description="Exclude story paths")
+    @option("public", bool, description="Make route visible to others")
     async def nightfrequenter(
-        self, ctx: ApplicationContext, path_count: int = 8, no_story: bool = False
+        self,
+        ctx: ApplicationContext,
+        path_count: int = 8,
+        no_story: bool = False,
+        public: bool = False,
     ):
-        await self.frequenter(ctx, path_count, no_story=no_story, time_of_day="night")
+        await self.frequenter(
+            ctx,
+            path_count=path_count,
+            no_story=no_story,
+            time_of_day="night",
+            public=public,
+        )
 
     # ---------------------------------------------------------------------------- #
     #                             DAY FREQUENTER ALIAS                             #
@@ -66,12 +79,23 @@ class FrequenterCog(commands.Cog):
     @commands.slash_command(
         name="dayfrequenter", description="Generate a frequenter route with only day time paths"
     )
-    @option("paths", int, description="Number of paths to generate")
-    @option("no_story", bool, description="Exclude story paths?")
+    @option("path_count", int, description="Number of paths")
+    @option("no_story", bool, description="Exclude story paths")
+    @option("public", bool, description="Make route visible to others")
     async def dayfrequenter(
-        self, ctx: ApplicationContext, path_count: int = 8, no_story: bool = False
+        self,
+        ctx: ApplicationContext,
+        path_count: int = 8,
+        no_story: bool = False,
+        public: bool = False,
     ):
-        await self.frequenter(ctx, path_count, no_story=no_story, time_of_day="day")
+        await self.frequenter(
+            ctx,
+            path_count=path_count,
+            no_story=no_story,
+            time_of_day="day",
+            public=public,
+        )
 
     # ---------------------------------------------------------------------------- #
     #                            CHAOS FREQUENTER ALIAS                            #
@@ -79,9 +103,20 @@ class FrequenterCog(commands.Cog):
     @commands.slash_command(
         name="chaosfrequenter", description="Generate a random frequenter route"
     )
-    @option("paths", int, description="Number of paths to generate")
-    async def chaosfrequenter(self, ctx: ApplicationContext, path_count: int = 8):
-        await self.frequenter(ctx, path_count, ignore_filters=True)
+    @option("path_count", int, description="Number of paths")
+    @option("public", bool, description="Make route visible to others")
+    async def chaosfrequenter(
+        self,
+        ctx: ApplicationContext,
+        path_count: int = 8,
+        public: bool = False,
+    ):
+        await self.frequenter(
+            ctx,
+            path_count=path_count,
+            ignore_filters=True,
+            public=public,
+        )
 
 
 # ---------------------------------------------------------------------------- #
