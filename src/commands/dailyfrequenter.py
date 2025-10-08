@@ -19,10 +19,16 @@ class DailyFrequenterCog(commands.Cog):
 
     def __init__(self, bot: PathfinderBot):
         self.bot: PathfinderBot = bot
-        self.post_dailyfrequenter.start()
+        self.dailyfrequenter_task.start()
+
+    def _build_dailyfrequenter_embed(self) -> discord.Embed:
+        picked_paths = pick_paths()
+        embed = generate_frequenter_embed(picked_paths)
+        embed.title = f"Daily Frequenter for <t:{int(datetime.datetime.now().timestamp())}:d>"
+        return embed
 
     @tasks.loop(time=datetime.time(hour=0, minute=0, tzinfo=datetime.timezone.utc))
-    async def post_dailyfrequenter(self):
+    async def dailyfrequenter_task(self):
         for guild_id in self.bot.sm.settings.guilds.keys():
             try:
                 df = self.bot.sm.get_guild(int(guild_id)).get_dailyfrequenter()
@@ -56,8 +62,7 @@ class DailyFrequenterCog(commands.Cog):
                         )
                         continue
 
-                picked_paths = pick_paths()
-                embed = generate_frequenter_embed(picked_paths)
+                embed = self._build_dailyfrequenter_embed()
 
                 if previous_message:
                     try:
@@ -88,7 +93,7 @@ class DailyFrequenterCog(commands.Cog):
                     f"Unexpected error in post_dailyfrequenter for guild {guild_id}: {e}"
                 )
 
-    @post_dailyfrequenter.before_loop
+    @dailyfrequenter_task.before_loop
     async def before_post_dailyfrequenter(self):
         await self.bot.wait_until_ready()
 
@@ -131,7 +136,7 @@ class DailyFrequenterCog(commands.Cog):
             )
             return
 
-        embed = generate_frequenter_embed(pick_paths())
+        embed = self._build_dailyfrequenter_embed()
 
         try:
             message = await ctx.channel.send(embed=embed)
