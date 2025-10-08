@@ -107,10 +107,11 @@ class DailyFrequenterCog(commands.Cog):
     async def dailyfrequenter_task(self):
         for guild_id in self.bot.sm.settings.guilds.keys():
             try:
-                df = self.bot.sm.get_guild(int(guild_id)).get_dailyfrequenter()
+                gsm = self.bot.sm.get_guild(int(guild_id))
+                df = gsm.get_dailyfrequenter()
 
                 if not df.channel_id:
-                    logging.warning(f"No channel configured for guild {guild_id}")
+                    # not configured
                     continue
 
                 channel = self.bot.get_channel(df.channel_id)
@@ -126,15 +127,9 @@ class DailyFrequenterCog(commands.Cog):
                         previous_message = await channel.fetch_message(df.message_id)
                     except discord.NotFound:
                         logging.warning(f"Message {df.message_id} not found in guild {guild_id}")
-                        previous_message = None
-                    except discord.Forbidden:
+                    except (discord.Forbidden, discord.HTTPException) as e:
                         logging.error(
-                            f"No permission to fetch message {df.message_id} in guild {guild_id}"
-                        )
-                        continue
-                    except discord.HTTPException as e:
-                        logging.error(
-                            f"HTTP error fetching message {df.message_id} in {guild_id}: {e}"
+                            f"Failed to fetch message {df.message_id} in guild {guild_id}: {e}"
                         )
                         continue
 
@@ -143,26 +138,19 @@ class DailyFrequenterCog(commands.Cog):
                 if previous_message:
                     try:
                         await previous_message.edit(embed=embed)
-                    except discord.NotFound:
+                    except (discord.NotFound, discord.Forbidden, discord.HTTPException) as e:
                         logging.warning(
-                            f"Message {df.message_id} disappeared while editing in {guild_id}"
-                        )
-                    except discord.Forbidden:
-                        logging.error(
-                            f"No permission to edit message {df.message_id} in guild {guild_id}"
-                        )
-                    except discord.HTTPException as e:
-                        logging.error(
-                            f"HTTP error editing message {df.message_id} in {guild_id}: {e}"
+                            f"Failed to edit message {df.message_id} in guild {guild_id}: {e}"
                         )
                 else:
                     try:
-                        await channel.send(embed=embed)
-                        logging.info(f"Reposted dailyfrequenter in {guild_id}")
-                    except discord.Forbidden:
-                        logging.error(f"No permission to send message in {df.channel_id}")
-                    except discord.HTTPException as e:
-                        logging.error(f"HTTP error sending message in {guild_id}: {e}")
+                        message = await channel.send(embed=embed)
+                        gsm.set_dailyfrequenter(df.channel_id, message.id)
+                        logging.info(
+                            f"Reposted dailyfrequenter in {guild_id} and updated message ID"
+                        )
+                    except (discord.Forbidden, discord.HTTPException) as e:
+                        logging.error(f"Failed to send message in {guild_id}: {e}")
 
             except Exception as e:
                 logging.exception(
