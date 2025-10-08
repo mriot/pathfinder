@@ -63,6 +63,26 @@ Currently, neither filters nor blacklists are considered when generating a route
 - `/dailyfrequenter view` shows the current configuration.  
 - `/dailyfrequenter clear` clears the configuration.
 
+---
+
+### 🔎 Looking for Group
+
+A simple utility command to coordinate runs across time zones.
+
+Use `/lfg`, select a role to ping and a time for the run.
+
+The time can be absolute like `15:00` or relative like `1h30m`.  
+For convenience you can also just type `13` for `13:00`.
+
+Discord automatically converts the timestamp for each user’s timezone.  
+So if you schedule a run at `13:00` German time, players in London will see `12:00`.
+
+#### Examples
+
+`/lfg @Frequenter 1h30m` → Posts a message mentioning `@Frequenter` for a run in 1 hour and 30 minutes.
+
+`/lfg @Tour 13:00` → Posts a message mentioning `@Tour` for a run at 13:00 (your local time).
+
 ## Dev & Hosting
 
 > Python 3.12

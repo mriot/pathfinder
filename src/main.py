@@ -20,6 +20,7 @@ def main():
     bot.load_extension("commands.frequenter")
     bot.load_extension("commands.blacklist")
     bot.load_extension("commands.dailyfrequenter")
+    bot.load_extension("commands.lfg")
 
     bot.run(env.TOKEN)
 
