@@ -27,6 +27,82 @@ class DailyFrequenterCog(commands.Cog):
         embed.title = f"Daily Frequenter for <t:{int(datetime.datetime.now().timestamp())}:d>"
         return embed
 
+    # ---------------------------------------------------------------------------- #
+    #                             DAILYFREQUENTER SETUP                            #
+    # ---------------------------------------------------------------------------- #
+    @dailyfrequenter_commands.command(
+        name="setup", description="Setup an automatic daily frequenter in this channel"
+    )
+    async def setup_dailyfrequenter(self, ctx: ApplicationContext):
+        if not isinstance(ctx.channel, TextChannel):
+            await ctx.respond(
+                "This command must be used in a text channel I can access.",
+                ephemeral=True,
+            )
+            return
+
+        embed = self._build_dailyfrequenter_embed()
+
+        try:
+            message = await ctx.channel.send(embed=embed)
+        except discord.Forbidden:
+            await ctx.respond("I don't have permission to send messages here.", ephemeral=True)
+            return
+        except discord.HTTPException as e:
+            await ctx.respond(f"Failed to send message: {e}", ephemeral=True)
+            return
+
+        gsm = self.bot.sm.get_guild(ctx.guild.id)
+        gsm.set_dailyfrequenter(ctx.channel.id, message.id)
+
+        await ctx.respond(
+            f"Daily frequenter successfully set up in {ctx.channel.mention}.",
+            ephemeral=True,
+        )
+
+    # ---------------------------------------------------------------------------- #
+    #                             DAILYFREQUENTER VIEW                             #
+    # ---------------------------------------------------------------------------- #
+    @dailyfrequenter_commands.command(
+        name="view", description="Show the current configuration and status of the daily frequenter"
+    )
+    async def view_dailyfrequenter(self, ctx: ApplicationContext):
+        gsm = self.bot.sm.get_guild(ctx.guild.id)
+        df = gsm.get_dailyfrequenter()
+
+        if not df.channel_id:
+            await ctx.respond("No daily frequenter is currently configured.", ephemeral=True)
+            return
+
+        channel = self.bot.get_channel(df.channel_id)
+        if channel and isinstance(channel, TextChannel):
+            await ctx.respond(
+                f"Daily frequenter is currently set up in {channel.mention}.", ephemeral=True
+            )
+        else:
+            await ctx.respond(
+                f"Daily frequenter is currently set up in an unknown channel with ID {df.channel_id}.",
+                ephemeral=True,
+            )
+
+    # ---------------------------------------------------------------------------- #
+    #                             DAILYFREQUENTER CLEAR                            #
+    # ---------------------------------------------------------------------------- #
+    @dailyfrequenter_commands.command(
+        name="clear", description="Clear the automatic daily frequenter"
+    )
+    async def clear_dailyfrequenter(self, ctx: ApplicationContext):
+        gsm = self.bot.sm.get_guild(ctx.guild.id)
+        gsm.clear_guild()  # currently removes all guild-specific settings
+
+        await ctx.respond(
+            "Daily frequenter configuration cleared for this server.",
+            ephemeral=True,
+        )
+
+    # ---------------------------------------------------------------------------- #
+    #                                   TASK LOOP                                  #
+    # ---------------------------------------------------------------------------- #
     @tasks.loop(time=datetime.time(hour=0, minute=0, tzinfo=datetime.timezone.utc))
     async def dailyfrequenter_task(self):
         for guild_id in self.bot.sm.settings.guilds.keys():
@@ -93,82 +169,10 @@ class DailyFrequenterCog(commands.Cog):
                     f"Unexpected error in post_dailyfrequenter for guild {guild_id}: {e}"
                 )
 
+    # -------------------------------- READY CHECK ------------------------------- #
     @dailyfrequenter_task.before_loop
     async def before_post_dailyfrequenter(self):
         await self.bot.wait_until_ready()
-
-    # ---------------------------------------------------------------------------- #
-    #                             DAILYFREQUENTER VIEW                             #
-    # ---------------------------------------------------------------------------- #
-    @dailyfrequenter_commands.command(
-        name="view", description="Show the current configuration and status of the daily frequenter"
-    )
-    async def view_dailyfrequenter(self, ctx: ApplicationContext):
-        gsm = self.bot.sm.get_guild(ctx.guild.id)
-        df = gsm.get_dailyfrequenter()
-
-        if not df.channel_id:
-            await ctx.respond("No daily frequenter is currently configured.", ephemeral=True)
-            return
-
-        channel = self.bot.get_channel(df.channel_id)
-        if channel and isinstance(channel, TextChannel):
-            await ctx.respond(
-                f"Daily frequenter is currently set up in {channel.mention}.", ephemeral=True
-            )
-        else:
-            await ctx.respond(
-                f"Daily frequenter is currently set up in an unknown channel with ID {df.channel_id}.",
-                ephemeral=True,
-            )
-
-    # ---------------------------------------------------------------------------- #
-    #                             DAILYFREQUENTER SETUP                            #
-    # ---------------------------------------------------------------------------- #
-    @dailyfrequenter_commands.command(
-        name="setup", description="Setup an automatic daily frequenter in this channel"
-    )
-    async def setup_dailyfrequenter(self, ctx: ApplicationContext):
-        if not isinstance(ctx.channel, TextChannel):
-            await ctx.respond(
-                "This command must be used in a text channel I can access.",
-                ephemeral=True,
-            )
-            return
-
-        embed = self._build_dailyfrequenter_embed()
-
-        try:
-            message = await ctx.channel.send(embed=embed)
-        except discord.Forbidden:
-            await ctx.respond("I don't have permission to send messages here.", ephemeral=True)
-            return
-        except discord.HTTPException as e:
-            await ctx.respond(f"Failed to send message: {e}", ephemeral=True)
-            return
-
-        gsm = self.bot.sm.get_guild(ctx.guild.id)
-        gsm.set_dailyfrequenter(ctx.channel.id, message.id)
-
-        await ctx.respond(
-            f"Daily frequenter successfully set up in {ctx.channel.mention}.",
-            ephemeral=True,
-        )
-
-    # ---------------------------------------------------------------------------- #
-    #                             DAILYFREQUENTER CLEAR                            #
-    # ---------------------------------------------------------------------------- #
-    @dailyfrequenter_commands.command(
-        name="clear", description="Clear the automatic daily frequenter"
-    )
-    async def clear_dailyfrequenter(self, ctx: ApplicationContext):
-        gsm = self.bot.sm.get_guild(ctx.guild.id)
-        gsm.clear_guild()  # currently removes all guild-specific settings
-
-        await ctx.respond(
-            "Daily frequenter configuration cleared for this server.",
-            ephemeral=True,
-        )
 
 
 # ---------------------------------------------------------------------------- #
