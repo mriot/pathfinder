@@ -19,9 +19,12 @@ class GuildSettingsManager:
         self.sm.mark_dirty()
 
     def unset_dailyfrequenter(self):
-        g = self.sm.settings.guilds[self.guild_id]
-        g.dailyfrequenter = GuildSettings().dailyfrequenter
-        self.sm.mark_dirty()
+        # NOTE: currently we don't have any other guild related settings, so we just clear everything
+        self.clear_guild()
+
+        # g = self.sm.settings.guilds[self.guild_id]
+        # g.dailyfrequenter = GuildSettings().dailyfrequenter
+        # self.sm.mark_dirty()
 
     def clear_guild(self):
         if self.guild_id in self.sm.settings.guilds:

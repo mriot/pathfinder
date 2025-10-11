@@ -93,7 +93,7 @@ class DailyFrequenterCog(commands.Cog):
     )
     async def clear_dailyfrequenter(self, ctx: ApplicationContext):
         gsm = self.bot.sm.get_guild(ctx.guild.id)
-        gsm.clear_guild()  # currently removes all guild-specific settings
+        gsm.unset_dailyfrequenter()
 
         await ctx.respond(
             "Daily frequenter configuration cleared for this server.",

@@ -118,7 +118,7 @@ class BlacklistCog(commands.Cog):
     @blacklist_commands.command(name="clear", description="Clear your personal blacklist")
     async def clear_blacklist(self, ctx: ApplicationContext):
         usm = self.bot.sm.get_user(ctx.author.id)
-        usm.clear_user()
+        usm.blacklist_clear()
 
         await ctx.respond("Cleared your personal blacklist", ephemeral=True)
 

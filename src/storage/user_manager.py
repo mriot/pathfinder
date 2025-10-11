@@ -42,9 +42,12 @@ class UserSettingsManager:
         self.sm.mark_dirty()
 
     def blacklist_clear(self):
-        if self.user_id in self.sm.settings.users:
-            self.sm.settings.users[self.user_id].blacklist.clear()
-            self.sm.mark_dirty()
+        # NOTE: currently we don't have any other user related settings, so we just clear everything
+        self.clear_user()
+
+        # if self.user_id in self.sm.settings.users:
+        #     self.sm.settings.users[self.user_id].blacklist.clear()
+        #     self.sm.mark_dirty()
 
     def clear_user(self):
         if self.user_id in self.sm.settings.users:
