@@ -1,5 +1,6 @@
 import logging
 import os
+from logging.handlers import RotatingFileHandler
 from os import path
 
 from data.schemas import Environment
@@ -13,7 +14,11 @@ def setup_logging():
 
     formatter = logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
 
-    file_handler = logging.FileHandler(log_file_path)
+    file_handler = RotatingFileHandler(
+        log_file_path,
+        maxBytes=10_000_000,  # 10 MB
+        backupCount=1,
+    )
     file_handler.setLevel(logging.INFO)
     file_handler.setFormatter(formatter)
 
