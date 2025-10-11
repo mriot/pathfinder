@@ -23,6 +23,9 @@ class DailyFrequenterCog(commands.Cog):
 
     def _build_dailyfrequenter_embed(self) -> discord.Embed:
         picked_paths = pick_paths()
+        logging.info(
+            "DAILY_FREQ_PICKS: " + (", ".join(f"{c.dungeon_id}:{c.path_id}" for c in picked_paths))
+        )
         embed = generate_frequenter_embed(picked_paths)
         embed.title = f"Daily Frequenter for <t:{int(datetime.datetime.now().timestamp())}:d>"
         return embed
