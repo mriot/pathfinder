@@ -12,10 +12,11 @@ class GuildSettingsManager:
     def get_dailyfrequenter(self) -> DailyFrequenter:
         return self.sm.settings.guilds[self.guild_id].dailyfrequenter
 
-    def set_dailyfrequenter(self, channel_id: int, message_id: int):
+    def set_dailyfrequenter(self, channel_id: int, message_id: int, edit_last_message: bool = True):
         g = self.sm.settings.guilds[self.guild_id]
         g.dailyfrequenter.channel_id = channel_id
         g.dailyfrequenter.message_id = message_id
+        g.dailyfrequenter.edit_last_message = edit_last_message
         self.sm.mark_dirty()
 
     def unset_dailyfrequenter(self):

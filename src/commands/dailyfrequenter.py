@@ -2,7 +2,7 @@ import datetime
 import logging
 
 import discord
-from discord import ApplicationContext, SlashCommandGroup, TextChannel
+from discord import ApplicationContext, SlashCommandGroup, TextChannel, option
 from discord.ext import commands, tasks
 
 from core.bot import PathfinderBot
@@ -33,7 +33,8 @@ class DailyFrequenterCog(commands.Cog):
     @dailyfrequenter_commands.command(
         name="setup", description="Setup an automatic daily frequenter in this channel"
     )
-    async def setup_dailyfrequenter(self, ctx: ApplicationContext):
+    @option("new_post", bool, description="Create a new post instead of editing the existing one")
+    async def setup_dailyfrequenter(self, ctx: ApplicationContext, new_post: bool = False):
         if not isinstance(ctx.channel, TextChannel):
             await ctx.respond(
                 "This command must be used in a text channel I can access.",
@@ -53,7 +54,7 @@ class DailyFrequenterCog(commands.Cog):
             return
 
         gsm = self.bot.sm.get_guild(ctx.guild.id)
-        gsm.set_dailyfrequenter(ctx.channel.id, message.id)
+        gsm.set_dailyfrequenter(ctx.channel.id, message.id, edit_last_message=not new_post)
 
         await ctx.respond(
             f"Daily frequenter successfully set up in {ctx.channel.mention}.",
@@ -103,7 +104,8 @@ class DailyFrequenterCog(commands.Cog):
     # ---------------------------------------------------------------------------- #
     #                                   TASK LOOP                                  #
     # ---------------------------------------------------------------------------- #
-    @tasks.loop(time=datetime.time(hour=0, minute=0, tzinfo=datetime.timezone.utc))
+    # @tasks.loop(time=datetime.time(hour=0, minute=0, tzinfo=datetime.timezone.utc))
+    @tasks.loop(seconds=10)  # TODO !!!! CHANGE BACK !!!!
     async def dailyfrequenter_task(self):
         for gsm in self.bot.sm.get_guilds():
             try:
@@ -138,15 +140,20 @@ class DailyFrequenterCog(commands.Cog):
 
                 if previous_message:
                     try:
-                        await previous_message.edit(embed=embed)
+                        if df.edit_last_message:
+                            await previous_message.edit(embed=embed)
+                        else:
+                            message = await channel.send(embed=embed)
+                            gsm.set_dailyfrequenter(df.channel_id, message.id, df.edit_last_message)
+                            await previous_message.delete()
                     except (discord.NotFound, discord.Forbidden, discord.HTTPException) as e:
                         logging.warning(
-                            f"Failed to edit message {df.message_id} in guild {gsm.guild_id}: {e}"
+                            f"Failed to update frequenter message {df.message_id} in guild {gsm.guild_id}: {e}"
                         )
                 else:
                     try:
                         message = await channel.send(embed=embed)
-                        gsm.set_dailyfrequenter(df.channel_id, message.id)
+                        gsm.set_dailyfrequenter(df.channel_id, message.id, df.edit_last_message)
                         logging.info(
                             f"Reposted dailyfrequenter in {gsm.guild_id} and updated message ID"
                         )

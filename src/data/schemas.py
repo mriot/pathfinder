@@ -17,7 +17,7 @@ Blacklist = Dict[DungeonID, List[PathID]]
 class DailyFrequenter:
     channel_id: int | None = None
     message_id: int | None = None
-    edit_last_message: bool = True  # False = del old + post new msg ## ! CURRENTLY UNUSED
+    edit_last_message: bool = True  # set to False to delete old and post a new message
 
 
 @dataclass
