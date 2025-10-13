@@ -38,7 +38,7 @@ class SettingsManager:
             with self.path.open("r", encoding="utf-8") as f:
                 data = json.load(f)
             logging.info(f"Loaded settings from {self.path}")
-            return from_dict(Settings, data)
+            return from_dict(Settings, decode_snowflakes(data))
         except FileNotFoundError:
             logging.warning(f"No settings file found at {self.path}, creating new one")
             settings = Settings()
@@ -61,10 +61,53 @@ class SettingsManager:
         try:
             self.path.parent.mkdir(parents=True, exist_ok=True)
             with self.path.open("w", encoding="utf-8") as f:
-                json.dump(asdict(self.settings), f, indent=4, ensure_ascii=False)
+                json.dump(encode_snowflakes(asdict(self.settings)), f, indent=4)
             logging.info(f"Settings saved to {self.path}")
         except OSError as err:
             logging.exception(f"I/O error while saving settings: {err}")
 
     def mark_dirty(self):
         self._debounced_save()
+
+
+# ---------------------------------------------------------------------------- #
+#                              SNOWFLAKE HANDLING                              #
+# ---------------------------------------------------------------------------- #
+
+
+def _is_snowflake(v: str | int) -> bool:
+    try:
+        i = int(v)
+    except (TypeError, ValueError):
+        return False
+    return i > 1420070400000  # Discord epoch (January 1, 2015)
+
+
+def decode_snowflakes(data: dict) -> dict:
+    out = {}
+    for k, v in data.items():
+        if isinstance(v, dict):
+            v = decode_snowflakes(v)
+        elif isinstance(v, list):
+            v = [decode_snowflakes(i) if isinstance(i, dict) else i for i in v]
+        elif isinstance(v, str) and _is_snowflake(v):
+            v = int(v)
+        if isinstance(k, str) and _is_snowflake(k):
+            k = int(k)
+        out[k] = v
+    return out
+
+
+def encode_snowflakes(data: dict) -> dict:
+    out = {}
+    for k, v in data.items():
+        if isinstance(v, dict):
+            v = encode_snowflakes(v)
+        elif isinstance(v, list):
+            v = [encode_snowflakes(i) if isinstance(i, dict) else i for i in v]
+        elif isinstance(v, int) and _is_snowflake(v):
+            v = str(v)
+        if isinstance(k, int) and _is_snowflake(k):
+            k = str(k)
+        out[k] = v
+    return out

@@ -7,9 +7,6 @@ from typing import Dict, List, Literal
 DungeonID = str
 PathID = int
 
-GuildID = str
-UserID = str
-
 Blacklist = Dict[DungeonID, List[PathID]]
 
 
@@ -35,8 +32,8 @@ class UserSettings:
 
 @dataclass
 class Settings:
-    guilds: Dict[GuildID, GuildSettings] = field(default_factory=dict)
-    users: Dict[UserID, UserSettings] = field(default_factory=dict)
+    guilds: Dict[int, GuildSettings] = field(default_factory=dict)
+    users: Dict[int, UserSettings] = field(default_factory=dict)
 
 
 # ---------------------------------------------------------------------------- #

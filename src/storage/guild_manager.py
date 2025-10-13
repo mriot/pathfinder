@@ -5,7 +5,7 @@ from storage.settings_manager import SettingsManager
 class GuildSettingsManager:
     def __init__(self, sm: SettingsManager, guild_id: int):
         self.sm = sm
-        self.guild_id = str(guild_id)
+        self.guild_id = guild_id
 
         self.sm.settings.guilds.setdefault(self.guild_id, GuildSettings())
 

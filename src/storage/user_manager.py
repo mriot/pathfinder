@@ -5,7 +5,7 @@ from storage.settings_manager import SettingsManager
 class UserSettingsManager:
     def __init__(self, sm: SettingsManager, user_id: int):
         self.sm = sm
-        self.user_id = str(user_id)
+        self.user_id = user_id
 
         self.sm.settings.users.setdefault(self.user_id, UserSettings())
 
