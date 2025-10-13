@@ -67,13 +67,20 @@ class BlacklistCog(commands.Cog):
         if path is not None and (path < 0 or path > 4):
             return await ctx.respond("Invalid path :face_with_raised_eyebrow:", ephemeral=True)
 
-        selected_dungeon = next(d for d in DUNGEONS if d.id == dungeon)
+        if (selected_dungeon := next((d for d in DUNGEONS if d.id == dungeon), None)) is None:
+            return await ctx.respond("Invalid dungeon :face_with_raised_eyebrow:", ephemeral=True)
+
+        selected_path = None
+        if path is not None:  # means a specific path should be excluded
+            selected_path = next((p for p in selected_dungeon.paths if p.id == path), None)
+            if selected_path is None:
+                return await ctx.respond("Invalid path :face_with_raised_eyebrow:", ephemeral=True)
 
         usm = self.bot.sm.get_user(ctx.author.id)
         usm.blacklist_add(selected_dungeon, path)
 
         embed = discord.Embed(title="Blacklist updated")
-        path_info = "All paths" if path is None else selected_dungeon.paths[path].name
+        path_info = "All paths" if selected_path is None else selected_path.name
         embed.description = (
             f"{selected_dungeon.emoji} **{selected_dungeon.name}**: {path_info} added to blacklist"
         )
