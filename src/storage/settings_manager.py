@@ -26,6 +26,9 @@ class SettingsManager:
 
         return GuildSettingsManager(self, guild_id)
 
+    def get_guilds(self):
+        return [self.get_guild(int(gid)) for gid in self.settings.guilds.keys()]
+
     # ---------------------------------------------------------------------------- #
     #                                 SETTINGS.JSON                                #
     # ---------------------------------------------------------------------------- #
