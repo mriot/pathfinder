@@ -67,6 +67,8 @@ Currently, neither filters nor blacklists are considered when generating a route
 
 ### 🔎 Looking for Group
 
+<img alt="image" src="./docs/lfg.png" align="right" />
+
 A simple utility command to coordinate runs across time zones.
 
 Use `/lfg`, select a role to ping and a time for the run.
