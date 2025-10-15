@@ -1,14 +1,18 @@
 import discord
 
 from core.bot import PathfinderBot
+from data.emojis import BotEmojis
 from storage.settings_manager import SettingsManager
 from utils import setup_env, setup_logging
 
 
 def main():
     setup_logging()
+    BotEmojis.load()
+
     env = setup_env()
     sm = SettingsManager()
+
     bot = PathfinderBot(
         intents=discord.Intents.default(),
         application_id=env.APP_ID,

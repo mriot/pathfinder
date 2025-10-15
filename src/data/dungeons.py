@@ -1,10 +1,11 @@
+from data.emojis import BotEmojis
 from data.schemas import Dungeon, DungeonPath
 
 DUNGEONS: list[Dungeon] = [
     Dungeon(
         id="AC",
         name="Ascalonian Catacombs",
-        emoji="<:ac:1423759741103898674>",
+        emoji=BotEmojis.AC,
         paths=[
             DungeonPath(0, "Story", 30, "Night", True),
             DungeonPath(1, "Path 1 — `Hodgins`", 35, "Night", False),
@@ -15,7 +16,7 @@ DUNGEONS: list[Dungeon] = [
     Dungeon(
         id="CM",
         name="Caudecus's Manor",
-        emoji="<:cm:1423759758447349894>",
+        emoji=BotEmojis.CM,
         paths=[
             DungeonPath(0, "Story", 40, "Day", True),
             DungeonPath(1, "Path 1 — `Asura`", 45, "Day", False),
@@ -26,7 +27,7 @@ DUNGEONS: list[Dungeon] = [
     Dungeon(
         id="TA",
         name="Twilight Arbor",
-        emoji="<:ta:1423759793637822464>",
+        emoji=BotEmojis.TA,
         paths=[
             DungeonPath(0, "Story", 50, "Night", True),
             DungeonPath(1, "Forward — `Vevina`", 55, "Night", False),
@@ -37,7 +38,7 @@ DUNGEONS: list[Dungeon] = [
     Dungeon(
         id="SE",
         name="Sorrow's Embrace",
-        emoji="<:se:1423759851376611338>",
+        emoji=BotEmojis.SE,
         paths=[
             DungeonPath(0, "Story", 60, "Night", True),
             DungeonPath(1, "Path 1 — `Fergg`", 65, "Night", False),
@@ -48,7 +49,7 @@ DUNGEONS: list[Dungeon] = [
     Dungeon(
         id="CoF",
         name="Citadel of Flame",
-        emoji="<:cof:1423759875741319289>",
+        emoji=BotEmojis.COF,
         paths=[
             DungeonPath(0, "Story", 70, "Night", True),
             DungeonPath(1, "Path 1 — `Ferrah`", 75, "Night", False),
@@ -59,7 +60,7 @@ DUNGEONS: list[Dungeon] = [
     Dungeon(
         id="HotW",
         name="Honor of the Waves",
-        emoji="<:hotw:1423759894888059052>",
+        emoji=BotEmojis.HOTW,
         paths=[
             DungeonPath(0, "Story", 76, "Day", True),
             DungeonPath(1, "Path 1 — `Butcher`", 80, "Day", False),
@@ -70,7 +71,7 @@ DUNGEONS: list[Dungeon] = [
     Dungeon(
         id="CoE",
         name="Crucible of Eternity",
-        emoji="<:coe:1423759921035345993>",
+        emoji=BotEmojis.COE,
         paths=[
             DungeonPath(0, "Story", 78, "Day", True),
             DungeonPath(1, "Path 1 — `Submarine`", 80, "Night", False),
@@ -81,7 +82,7 @@ DUNGEONS: list[Dungeon] = [
     Dungeon(
         id="Arah",
         name="The Ruined City of Arah",
-        emoji="<:arah:1423759936239829083>",
+        emoji=BotEmojis.ARAH,
         paths=[
             # Arah Story is not included because it cannot be replayed
             DungeonPath(1, "Path 1 — `Jotun`", 80, "Day", False),
