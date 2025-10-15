@@ -5,11 +5,12 @@ from typing import List
 import discord
 
 from data.dungeons import DUNGEONS
+from data.emojis import BotEmojis
 from data.schemas import Candidate
 
 
 def _tod_emoji(value: str) -> str:
-    return "<:night_sigil:1423998252705120390>" if value.lower() == "night" else ""
+    return BotEmojis.NIGHT_SIGIL if value.lower() == "night" else ""
 
 
 def generate_frequenter_embed(picked_paths: List[Candidate]):

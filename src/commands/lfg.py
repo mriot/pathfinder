@@ -132,7 +132,7 @@ class ParticipationView(discord.ui.View):
         )
 
     @discord.ui.button(
-        emoji=BotEmojis.Yes, label="Sign me up!", style=discord.ButtonStyle.secondary
+        emoji=BotEmojis.TICK, label="Sign me up!", style=discord.ButtonStyle.secondary
     )
     async def joinleave(self, button, interaction: discord.Interaction):
         if not (user := interaction.user):
