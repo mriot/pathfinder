@@ -1,3 +1,4 @@
+import asyncio
 import datetime
 import logging
 import re
@@ -8,6 +9,7 @@ from discord.commands import option
 from discord.ext import commands
 
 from core.bot import PathfinderBot
+from data.emojis import BotEmojis
 
 
 class LfgCog(commands.Cog):
@@ -71,7 +73,7 @@ class LfgCog(commands.Cog):
         time: str,
         lfg_message: str = "",
     ):
-        message_parts = ["LFG"]
+        message_parts = [f"{BotEmojis.LFG} LFG"]
         message_parts.append(ping_role.mention)
 
         try:
@@ -89,7 +91,62 @@ class LfgCog(commands.Cog):
         if lfg_message:
             message_parts.append(f"— {lfg_message}")
 
-        await ctx.respond(" ".join(message_parts), allowed_mentions=discord.AllowedMentions())
+        message = " ".join(message_parts)
+
+        view = ParticipationView(message)
+        view.members.add(ctx.author.id)
+        await ctx.respond(view.render_text(), view=view)
+
+
+# ---------------------------------------------------------------------------- #
+#                              PARTICIPATION VIEW                              #
+# ---------------------------------------------------------------------------- #
+
+
+class ParticipationView(discord.ui.View):
+    def __init__(self, message_text: str):
+        super().__init__()
+        self.message_text = message_text
+        self.members: set[int] = set()
+        self._message_lifetime = 15
+        self._delete_task: asyncio.Task | None = None
+
+    async def _delete_message_task(self):
+        await asyncio.sleep(self._message_lifetime)
+        # note: self.message is only set after user interaction
+        if self.message and not self.members:
+            try:
+                await self.message.delete()
+            except discord.NotFound:
+                pass
+
+    def render_text(self) -> str:
+        names = [f"<@{m}>" for m in self.members]
+        removal_time = int(datetime.datetime.now().timestamp() + self._message_lifetime + 1)
+
+        return self.message_text + (
+            f"\n### Players ({len(names)}): " + (", ".join(names))
+            if names
+            else "\n### No one yet :neutral_face:\n"
+            + f"*LFG will be removed <t:{removal_time}:R> if no one signs up*"
+        )
+
+    @discord.ui.button(
+        emoji=BotEmojis.Yes, label="Sign me up!", style=discord.ButtonStyle.secondary
+    )
+    async def joinleave(self, button, interaction: discord.Interaction):
+        if not (user := interaction.user):
+            return
+
+        self.members.symmetric_difference_update({user.id})  # fancy toggle
+
+        await interaction.response.edit_message(content=self.render_text(), view=self)
+
+        # delete message after a while if no members remain
+        if not self.members:
+            if self._delete_task:
+                self._delete_task.cancel()
+            self._delete_task = asyncio.create_task(self._delete_message_task())
 
 
 # ---------------------------------------------------------------------------- #
