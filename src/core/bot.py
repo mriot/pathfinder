@@ -20,3 +20,10 @@ class PathfinderBot(discord.Bot):
         logging.info(
             f"{ctx.author} ({ctx.author.id}) used `/{ctx.command}` with options {ctx.selected_options} in guild {ctx.guild.name} ({ctx.guild.id})"
         )
+
+    async def on_guild_join(self, guild):
+        logging.info(f"Joined guild: {guild.name} (ID: {guild.id})")
+
+    async def on_guild_remove(self, guild):
+        logging.info(f"Removed from guild: {guild.name} (ID: {guild.id})")
+        self.sm.get_guild(guild.id).clear_guild()
