@@ -7,15 +7,13 @@ from data.schemas import Environment
 
 
 def setup_logging():
-    log_file_path = path.join(path.dirname(path.realpath(__file__)), "../app.log")
-
     logger = logging.getLogger()
     logger.setLevel(logging.INFO)
 
-    formatter = logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
+    formatter = logging.Formatter("%(asctime)s - %(levelname)s - %(name)s - %(message)s")
 
     file_handler = RotatingFileHandler(
-        log_file_path,
+        path.join(path.dirname(path.realpath(__file__)), "../app.log"),
         maxBytes=10_000_000,  # 10 MB
         backupCount=1,
     )
@@ -28,6 +26,15 @@ def setup_logging():
 
     logger.addHandler(file_handler)
     logger.addHandler(console_handler)
+
+    logging.getLogger("discord.gateway").setLevel(logging.WARNING)
+    logging.getLogger("discord.client").setLevel(logging.WARNING)
+    logging.getLogger("discord.http").setLevel(logging.WARNING)
+    logging.getLogger("websockets").setLevel(logging.WARNING)
+    logging.getLogger("discord.voice").setLevel(logging.WARNING)
+
+    # say hello
+    logging.info("\n" + "=" * 80 + "\n" + " " * 32 + "BOT STARTED" + "\n" + "=" * 80)
 
 
 def setup_env() -> Environment:
