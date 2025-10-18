@@ -21,6 +21,10 @@ class LfgCog(commands.Cog):
         """Parse time from user input and returns it as unix timestamp"""
         raw = raw.strip().lower()
         now = datetime.datetime.now().astimezone()
+
+        if raw == "now":
+            return int(now.timestamp())
+
         time_formats = [
             "%H:%M",  # 15:00
             "%H.%M",  # 15.00
@@ -95,7 +99,7 @@ class LfgCog(commands.Cog):
         message_text = " ".join(message_parts)
 
         now = datetime.datetime.now().astimezone().timestamp()
-        view = ParticipationView(message_text, max((parsed_time - now), 0) + 900)  # + 15 min
+        view = ParticipationView(message_text, max((parsed_time - now), 0) + 1800)  # + 30 min
         view.members.add(ctx.author.id)
 
         await ctx.respond(view._render_text(), view=view)
@@ -107,21 +111,36 @@ class LfgCog(commands.Cog):
 # ---------------------------------------------------------------------------- #
 #                              PARTICIPATION VIEW                              #
 # ---------------------------------------------------------------------------- #
-
-
 class ParticipationView(discord.ui.View):
     def __init__(self, message_text: str, timeout: float):
-        super().__init__(timeout=timeout, disable_on_timeout=True)
+        super().__init__(timeout=None, disable_on_timeout=True)
         self.message_text = message_text
+        self.timeout = timeout
         self.members: set[int] = set()
-        self._empty_lfg_lifespan = 15  # seconds
+        self._empty_lfg_lifespan = 30  # seconds
         self._delete_task: asyncio.Task | None = None
+        asyncio.create_task(self._force_timeout_task())
 
     async def on_timeout(self):
-        if self.message:
-            self.disable_all_items()
-            # msg must be updated to visibly disable the items
-            await self.message.edit(content=self._render_text(), view=self)
+        self.stop()
+        self.disable_all_items()
+        if (
+            self.message
+            and (btn := self.get_item("joinleave"))
+            and isinstance(btn, discord.ui.Button)
+        ):
+            btn.emoji = "🔒"
+            btn.label = "Sign-up closed"
+            try:
+                # must be updated to reflect the new state of the view
+                await self.message.edit(view=self)
+            except discord.NotFound:
+                pass
+
+    # Reason: the built-in timeout resets on every interaction - we don't want that
+    async def _force_timeout_task(self):
+        await asyncio.sleep(self.timeout)
+        await self.on_timeout()
 
     async def _delete_message_task(self):
         await asyncio.sleep(self._empty_lfg_lifespan)
@@ -143,7 +162,10 @@ class ParticipationView(discord.ui.View):
         )
 
     @discord.ui.button(
-        emoji=BotEmojis.TICK, label="Sign me up!", style=discord.ButtonStyle.secondary
+        emoji=BotEmojis.TICK,
+        label="Sign me up!",
+        style=discord.ButtonStyle.secondary,
+        custom_id="joinleave",
     )
     async def joinleave(self, button, interaction: discord.Interaction):
         if not (user := interaction.user):

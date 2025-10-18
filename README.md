@@ -73,8 +73,9 @@ A simple utility command to coordinate runs across time zones.
 
 Use `/lfg`, select a role to ping and a time for the run.
 
-The time can be absolute like `15:00` or relative like `1h30m`.  
-For convenience you can also just type `13` for `13:00`.
+The time can be absolute like `15:00` or relative like `1h30m` or just `now`.  
+For convenience you can also just type `13` for `13:00`.  
+12-hour times like `3PM` are also supported.
 
 Discord automatically converts the timestamp for each user’s timezone.  
 So if you schedule a run at `13:00` German time, players in London will see `12:00`.
