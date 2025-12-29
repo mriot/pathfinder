@@ -102,7 +102,9 @@ class LfgCog(commands.Cog):
         view = ParticipationView(message_text, max((parsed_time - now), 0) + 1800)  # + 30 min
         view.members.add(ctx.author.id)
 
-        await ctx.respond(view._render_text(), view=view)
+        await ctx.respond(
+            view._render_text(), view=view, allowed_mentions=discord.AllowedMentions(roles=True)
+        )
 
         interaction_message = await ctx.interaction.original_response()
         view.message = await ctx.channel.fetch_message(interaction_message.id)
