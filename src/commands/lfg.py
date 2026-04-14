@@ -99,7 +99,7 @@ class LfgCog(commands.Cog):
         message_text = " ".join(message_parts)
 
         now = datetime.datetime.now().astimezone().timestamp()
-        view = ParticipationView(message_text, max((parsed_time - now), 0) + 1800)  # + 30 min
+        view = ParticipationView(message_text, max((parsed_time - now), 0) + 1800, parsed_time)
         view.members.add(ctx.author.id)
 
         await ctx.respond(
@@ -114,14 +114,16 @@ class LfgCog(commands.Cog):
 #                              PARTICIPATION VIEW                              #
 # ---------------------------------------------------------------------------- #
 class ParticipationView(discord.ui.View):
-    def __init__(self, message_text: str, timeout: float):
+    def __init__(self, message_text: str, timeout: float, event_timestamp: float):
         super().__init__(timeout=None, disable_on_timeout=True)
         self.message_text = message_text
         self.timeout = timeout
+        self.event_timestamp = event_timestamp
         self.members: set[int] = set()
         self._empty_lfg_lifespan = 30  # seconds
         self._delete_task: asyncio.Task | None = None
         asyncio.create_task(self._force_timeout_task())
+        asyncio.create_task(self._event_time_reached())
 
     async def on_timeout(self):
         self.stop()
@@ -138,6 +140,30 @@ class ParticipationView(discord.ui.View):
                 await self.message.edit(view=self)
             except discord.NotFound:
                 pass
+
+    async def _event_time_reached(self):
+        now = datetime.datetime.now().astimezone().timestamp()
+        time_until_event = self.event_timestamp - now
+        five_minutes = 300
+
+        delay = (
+            (time_until_event - five_minutes)
+            if time_until_event > five_minutes
+            else max(time_until_event, 0)
+        )
+
+        await asyncio.sleep(delay)
+
+        # if everyone signed off, there's no need to send a reminder
+        if not self.members or not self.message:
+            return
+
+        mentions = " ".join(f"<@{m}>" for m in self.members)
+        message = "Starting soon!" if time_until_event > five_minutes else "Let's go!"
+
+        await self.message.reply(
+            f"{mentions} {message}", allowed_mentions=discord.AllowedMentions(users=True)
+        )
 
     # Reason: the built-in timeout resets on every interaction - we don't want that
     async def _force_timeout_task(self):
